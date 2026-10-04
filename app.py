@@ -25,36 +25,36 @@ class LogLevel:
 
 @app.route("/")
 def get_home():
-    return ("<div><a href=\"time\">Last Action</a></div>"
-            "<div><a href=\"log\">Show Log</a></div>"
-            "<div><a href=\"info\">Show last state</a></div>"
-            "<div><a href=\"settings\">Settings Page</a></div>")
+    return render_template('index.html', data=common_data_struct, last_seen=last_seen,
+                           Battery=Battery, Common=Common, Host=Host)
 
 
 @app.route("/time")
 def get_time():
-    return str(last_seen)
+    return render_template('info.html', data=common_data_struct, last_seen=last_seen)
 
 
 @app.route("/log")
 def get_log():
-    return (str(log_array)
-            .replace(",", "</div><div>")
-            .replace("'", "")
-            .replace("[", "<div>")
-            .replace("]", "</div>")
-            .replace("DEBUG: ", '<span style="color:blue">DEBUG: </span>')
-            .replace("ERROR: ", '<span style="color:red">ERROR: </span>'))
+    entries = []
+    for line in log_array:
+        # entries look like "<timestamp>: <LEVEL>: <message>"
+        parts = line.split(": ", 2)
+        if len(parts) == 3:
+            entries.append({"time": parts[0], "level": parts[1], "message": parts[2]})
+        else:
+            entries.append({"time": "", "level": "", "message": line})
+    return render_template('log.html', entries=entries, Common=Common)
 
 
 @app.route("/info")
 def get_info():
-    return str(common_data_struct)
+    return render_template('info.html', data=common_data_struct, last_seen=last_seen)
 
 
 @app.route('/settings')
 def get_settings():
-    return render_template('settings.html', Battery=Battery, Common=Common)
+    return render_template('settings.html', Battery=Battery, Common=Common, form={})
 
 
 @app.route('/submit', methods=['POST'])
@@ -68,7 +68,7 @@ def submit():
     low_disconnect_from_grid_above = int(request.form['low_disconnect_from_grid_above'])
 
     # get log level
-    Common.log_level = request.form['log_level']
+    log_level = request.form['log_level']
 
     if high_connect_to_grid_above < high_disconnect_from_grid_below:
         errors.append("Battery high disconnect needs to be above reconnect")
@@ -83,9 +83,11 @@ def submit():
         Battery.high_disconnect_from_grid_below = high_disconnect_from_grid_below
         Battery.low_connect_to_grid_below = low_connect_to_grid_below
         Battery.low_disconnect_from_grid_above = low_disconnect_from_grid_above
-        return "Form submitted successfully"
+        Common.log_level = log_level
+        return render_template('settings.html', Battery=Battery, Common=Common, form={}, saved=True)
     else:
-        return "Error:" + "\n\t".join(errors)
+        return render_template('settings.html', Battery=Battery, Common=Common, form=request.form,
+                               errors=errors), 400
 
 
 def check_modbus():

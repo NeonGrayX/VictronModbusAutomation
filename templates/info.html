@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Last State{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Last State</h1>
+    <p class="subtitle">Values read during the last Modbus poll.</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('get_info') }}">Refresh</a>
+</div>
+
+<section class="card">
+  <dl class="kv">
+    <dt>Last action</dt><dd>{{ last_seen }}</dd>
+    {% for key, value in data.items() %}
+    <dt>{{ key }}</dt><dd>{{ value }}</dd>
+    {% endfor %}
+  </dl>
+  {% if not data %}
+  <p class="muted small">No values have been read yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

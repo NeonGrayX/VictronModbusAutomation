@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Log{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Log</h1>
+    <p class="subtitle">Newest entries first &middot; {{ entries | length }} of max. {{ Common['log_capacity'] }}</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('get_log') }}">Refresh</a>
+</div>
+
+<section class="card log">
+  {% if entries %}
+  <ol class="log-list">
+    {% for entry in entries %}
+    <li>
+      <span class="log-time">{{ entry.time }}</span>
+      <span><span class="level level-{{ entry.level }}">{{ entry.level }}</span></span>
+      <span class="log-msg">{{ entry.message }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="empty">No log entries yet.</div>
+  {% endif %}
+</section>
+{% endblock %}

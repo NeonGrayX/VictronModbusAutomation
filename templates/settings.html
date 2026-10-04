@@ -1,32 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grid Settings Form</title>
-</head>
-<body>
-  <form action="/submit" method="post">
-    <label for="high_connect_to_grid_above">Battery high, connect to grid above:</label>
-    <input type="number" id="high_connect_to_grid_above" name="high_connect_to_grid_above" value="{{ Battery['high_connect_to_grid_above'] }}" min="0" max="100"><br><br>
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Settings</h1>
+    <p class="subtitle">Changes apply immediately and are kept until the app restarts.</p>
+  </div>
+</div>
 
-    <label for="high_disconnect_from_grid_below">Battery high, disconnect from grid below:</label>
-    <input type="number" id="high_disconnect_from_grid_below" name="high_disconnect_from_grid_below" value="{{ Battery['high_disconnect_from_grid_below'] }}" min="0" max="100"><br><br>
+<form action="{{ url_for('submit') }}" method="post" class="stack">
+  {% if errors %}
+  <div class="alert err" role="alert">
+    <p class="alert-title">Settings were not saved</p>
+    <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+  {% elif saved %}
+  <div class="alert ok" role="status">
+    <p class="alert-title">Settings saved</p>
+  </div>
+  {% endif %}
 
-    <label for="low_connect_to_grid_below">Battery Low, connect to grid below:</label>
-    <input type="number" id="low_connect_to_grid_below" name="low_connect_to_grid_below" value="{{ Battery['low_connect_to_grid_below'] }}" min="0" max="100"><br><br>
+  <section class="card">
+    <fieldset>
+      <div class="card-head">
+        <h2>Battery high</h2>
+        <span class="small muted">Use the grid when the battery is full</span>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="high_connect_to_grid_above">Connect to grid above</label>
+          <div class="input-wrap">
+            <input type="number" id="high_connect_to_grid_above" name="high_connect_to_grid_above" value="{{ form.get('high_connect_to_grid_above', Battery['high_connect_to_grid_above']) }}" min="0" max="100" required>
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="high_disconnect_from_grid_below">Disconnect from grid below</label>
+          <div class="input-wrap">
+            <input type="number" id="high_disconnect_from_grid_below" name="high_disconnect_from_grid_below" value="{{ form.get('high_disconnect_from_grid_below', Battery['high_disconnect_from_grid_below']) }}" min="0" max="100" required>
+            <span class="suffix">%</span>
+          </div>
+          <span class="hint">Must be at or below the connect value.</span>
+        </div>
+      </div>
+    </fieldset>
+  </section>
 
-    <label for="low_disconnect_from_grid_above">Battery Low, disconnect from grid above:</label>
-    <input type="number" id="low_disconnect_from_grid_above" name="low_disconnect_from_grid_above" value="{{ Battery['low_disconnect_from_grid_above'] }}" min="0" max="100"><br><br>
+  <section class="card">
+    <fieldset>
+      <div class="card-head">
+        <h2>Battery low</h2>
+        <span class="small muted">Use the grid to protect an empty battery</span>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="low_connect_to_grid_below">Connect to grid below</label>
+          <div class="input-wrap">
+            <input type="number" id="low_connect_to_grid_below" name="low_connect_to_grid_below" value="{{ form.get('low_connect_to_grid_below', Battery['low_connect_to_grid_below']) }}" min="0" max="100" required>
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="low_disconnect_from_grid_above">Disconnect from grid above</label>
+          <div class="input-wrap">
+            <input type="number" id="low_disconnect_from_grid_above" name="low_disconnect_from_grid_above" value="{{ form.get('low_disconnect_from_grid_above', Battery['low_disconnect_from_grid_above']) }}" min="0" max="100" required>
+            <span class="suffix">%</span>
+          </div>
+          <span class="hint">Must be at or above the connect value.</span>
+        </div>
+      </div>
+    </fieldset>
+  </section>
 
-    <label for="log_level">Log Level:</label>
-    <select id="log_level" name="log_level">
-      <option value="DEBUG" {% if Common['log_level'] == "DEBUG" %}selected{% endif %}>DEBUG</option>
-      <option value="INFO" {% if Common['log_level'] == "INFO" %}selected{% endif %}>INFO</option>
-      <option value="ERROR" {% if Common['log_level'] == "ERROR" %}selected{% endif %}>ERROR</option>
-    </select><br><br>
+  <section class="card">
+    <fieldset>
+      <div class="card-head"><h2>Logging</h2></div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="log_level">Log level</label>
+          <select id="log_level" name="log_level">
+            <option value="DEBUG" {% if form.get('log_level', Common['log_level']) == "DEBUG" %}selected{% endif %}>DEBUG</option>
+            <option value="INFO" {% if form.get('log_level', Common['log_level']) == "INFO" %}selected{% endif %}>INFO</option>
+            <option value="ERROR" {% if form.get('log_level', Common['log_level']) == "ERROR" %}selected{% endif %}>ERROR</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+  </section>
 
-    <input type="submit" value="Submit">
-  </form>
-</body>
-</html>
+  <div class="form-actions">
+    <a class="btn btn-secondary" href="{{ url_for('get_settings') }}">Reset</a>
+    <button type="submit" class="btn btn-primary">Save settings</button>
+  </div>
+</form>
+{% endblock %}

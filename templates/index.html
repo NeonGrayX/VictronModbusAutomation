@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="{{ Common['update_interval'] }}">{% endblock %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% set soc = data.get('soc') %}
+{% set soc_value = soc | float(-1) if soc is not none else -1 %}
+{% set mode = data.get('mode') %}
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="subtitle">Grid connection control based on battery state of charge.</p>
+  </div>
+  <span class="small muted">Refreshes every {{ Common['update_interval'] }}s</span>
+</div>
+
+<div class="stack">
+  <div class="grid">
+    <section class="card">
+      <div class="stat-label">State of charge</div>
+      <div class="stat-value">
+        {% if soc_value >= 0 %}{{ soc }}<span class="unit">%</span>{% else %}<span class="muted">&ndash;</span>{% endif %}
+      </div>
+      <div class="stat-sub">Battery</div>
+    </section>
+
+    <section class="card">
+      <div class="stat-label">Inverter mode</div>
+      <div class="stat-value">{{ mode if mode else '–' }}</div>
+      <div class="stat-sub">
+        {% if mode == 'On' %}<span class="badge ok">Grid connected</span>
+        {% elif mode == 'Inverter Only' %}<span class="badge warn">Running on battery</span>
+        {% elif mode %}<span class="badge">{{ mode }}</span>
+        {% else %}<span class="badge">No data yet</span>{% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stat-label">Last successful poll</div>
+      <div class="stat-value">{{ last_seen.strftime('%H:%M:%S') }}</div>
+      <div class="stat-sub">{{ last_seen.strftime('%Y-%m-%d') }}</div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Battery thresholds</h2>
+      <a class="small" href="{{ url_for('get_settings') }}">Edit</a>
+    </div>
+    <div class="gauge" role="img" aria-label="State of charge {{ soc if soc_value >= 0 else 'unknown' }} percent">
+      {% if soc_value >= 0 %}
+      <div class="gauge-fill" style="width: {{ [[soc_value, 0] | max, 100] | min }}%"></div>
+      {% endif %}
+      <div class="gauge-mark bottom" style="left: {{ Battery['low_connect_to_grid_below'] }}%"><span>{{ Battery['low_connect_to_grid_below'] }}</span></div>
+      <div class="gauge-mark top" style="left: {{ Battery['low_disconnect_from_grid_above'] }}%"><span>{{ Battery['low_disconnect_from_grid_above'] }}</span></div>
+      <div class="gauge-mark top" style="left: {{ Battery['high_disconnect_from_grid_below'] }}%"><span>{{ Battery['high_disconnect_from_grid_below'] }}</span></div>
+      <div class="gauge-mark bottom" style="left: {{ Battery['high_connect_to_grid_above'] }}%"><span>{{ Battery['high_connect_to_grid_above'] }}</span></div>
+    </div>
+    <dl class="kv">
+      <dt>Connect to grid when below</dt><dd>{{ Battery['low_connect_to_grid_below'] }} %</dd>
+      <dt>Disconnect from grid when above</dt><dd>{{ Battery['low_disconnect_from_grid_above'] }} %</dd>
+      <dt>Disconnect from grid when below</dt><dd>{{ Battery['high_disconnect_from_grid_below'] }} %</dd>
+      <dt>Connect to grid when above</dt><dd>{{ Battery['high_connect_to_grid_above'] }} %</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>System</h2></div>
+    <dl class="kv">
+      <dt>Modbus host</dt><dd>{{ Host.ip }}:{{ Host.port }}</dd>
+      <dt>Update interval</dt><dd>{{ Common['update_interval'] }} s</dd>
+      <dt>Log level</dt><dd>{{ Common['log_level'] }}</dd>
+    </dl>
+  </section>
+</div>
+{% endblock %}
